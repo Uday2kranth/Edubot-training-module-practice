@@ -2,16 +2,33 @@
 import streamlit as st
 import joblib
 import numpy as np
+import os
 
 # Load the model and model info
 @st.cache_resource
 def load_model():
-    model = joblib.load('iris_model.pkl')
-    model_info = joblib.load('model_info.pkl')
-    return model, model_info
+    try:
+        # Check if model files exist
+        if not os.path.exists('iris_model.pkl'):
+            st.error("Model file 'iris_model.pkl' not found!")
+            return None, None
+        if not os.path.exists('model_info.pkl'):
+            st.error("Model info file 'model_info.pkl' not found!")
+            return None, None
+            
+        model = joblib.load('iris_model.pkl')
+        model_info = joblib.load('model_info.pkl')
+        return model, model_info
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        return None, None
 
 # Load model
 model, model_info = load_model()
+
+# Check if models loaded successfully
+if model is None or model_info is None:
+    st.stop()
 
 # App title
 st.title('Iris Flower Classifier')
