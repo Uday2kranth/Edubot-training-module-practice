@@ -2,10 +2,6 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
-import os
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
 # Set page configuration
 st.set_page_config(
@@ -13,48 +9,6 @@ st.set_page_config(
     page_icon="🌸",
     layout="wide"
 )
-
-# Create model if it doesn't exist
-@st.cache_resource
-def create_model_if_needed():
-    # Check if model files exist
-    if not os.path.exists("iris_model.pkl") or not os.path.exists("model_info.pkl"):
-        st.info("🤖 Creating ML model for the first time... This will take a moment!")
-
-        with st.spinner("Training the machine learning model..."):
-            # Load iris dataset
-            iris = load_iris()
-
-            # Convert to pandas DataFrame
-            data = pd.DataFrame(iris.data, columns=iris.feature_names)
-            target = pd.Series(iris.target)
-
-            # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                data, target, test_size=0.2, random_state=42
-            )
-
-            # Train model
-            model = RandomForestClassifier(n_estimators=100, random_state=42)
-            model.fit(X_train, y_train)
-
-            # Calculate accuracy
-            accuracy = model.score(X_test, y_test)
-
-            # Save model
-            joblib.dump(model, "iris_model.pkl")
-
-            # Save model info
-            model_info = {
-                "feature_names": iris.feature_names,
-                "target_names": iris.target_names,
-                "accuracy": accuracy,
-            }
-            joblib.dump(model_info, "model_info.pkl")
-
-        st.success("✅ Model trained successfully! Refreshing the app...")
-        st.rerun()
-
 
 # Load the trained model and model information
 @st.cache_resource
@@ -67,10 +21,7 @@ def load_model():
 def main():
     st.title("🌸 Iris Flower Classifier")
     st.write("This app predicts the type of iris flower based on its measurements!")
-
-    # Create model if needed (first time setup)
-    create_model_if_needed()
-
+    
     # Load model
     model, model_info = load_model()
     

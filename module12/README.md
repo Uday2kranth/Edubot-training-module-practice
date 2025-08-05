@@ -17,7 +17,7 @@ This project is designed for **beginners in Python and Machine Learning**. It us
 ```
 📦 Iris Classifier
 ├── 🐍 train_model.py      # Simple ML training script
-├── 🌐 app.py              # Streamlit web application
+├── 🌐 iris_app.py         # Streamlit web application
 ├── 🤖 iris_model.pkl      # Trained model (auto-generated)
 ├── 📋 model_info.pkl      # Model information (auto-generated)
 └── 📄 requirements.txt    # Dependencies
@@ -30,14 +30,15 @@ This project is designed for **beginners in Python and Machine Learning**. It us
 pip install -r requirements.txt
 ```
 
-### Step 2: Train the Model
+### Step 2: Train the Model (Optional)
 ```bash
 python train_model.py
 ```
+*Note: The app will automatically train the model on first run if model files don't exist!*
 
 ### Step 3: Run the Web App
 ```bash
-streamlit run app.py
+streamlit run iris_app.py
 ```
 
 ### Step 4: Open Your Browser
