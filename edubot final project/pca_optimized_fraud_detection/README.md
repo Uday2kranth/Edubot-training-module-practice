@@ -169,14 +169,13 @@ pca_optimized_fraud_detection/
 
 ### Dependencies
 ```python
-streamlit==1.47.1      # Web dashboard framework
-pandas==2.2.3          # Data manipulation and analysis
-numpy==1.26.4          # Numerical computing
-scikit-learn==1.6.1    # Machine learning library
-xgboost==3.0.3         # Gradient boosting framework
-matplotlib==3.7.2      # Plotting library
-seaborn==0.12.2        # Statistical data visualization
-pickle5==0.0.12        # Object serialization
+streamlit>=1.28.0,<2.0.0  # Web dashboard framework
+pandas>=2.0.0,<3.0.0      # Data manipulation and analysis
+numpy>=1.24.0,<2.0.0      # Numerical computing
+scikit-learn>=1.3.0,<2.0.0 # Machine learning library
+xgboost>=2.0.0,<4.0.0     # Gradient boosting framework
+matplotlib>=3.6.0,<4.0.0  # Plotting library
+seaborn>=0.11.0,<1.0.0    # Statistical data visualization
 ```
 
 ### Model Configuration
@@ -294,6 +293,51 @@ export STREAMLIT_SERVER_PORT=8501
 export STREAMLIT_SERVER_ADDRESS=0.0.0.0
 export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 ```
+
+## Troubleshooting
+
+### Common Deployment Issues
+
+#### Streamlit Cloud Deployment Error
+If you encounter dependency conflicts during Streamlit Cloud deployment:
+
+1. **Error**: "installer returned a non-zero exit code"
+   - **Solution**: Ensure your `requirements.txt` uses flexible version ranges
+   - **Fix**: Use ranges like `pandas>=2.0.0,<3.0.0` instead of exact pins `pandas==2.2.3`
+
+2. **Package Conflicts**:
+   ```
+   ERROR: pip's dependency resolver does not currently consider all the packages that are installed
+   ```
+   - **Solution**: Remove conflicting packages or use compatible versions
+   - **Common conflicts**: Remove `pickle5` if using Python 3.8+
+
+3. **Memory Issues**:
+   - **Solution**: Optimize model loading with lazy initialization
+   - **Alternative**: Use lighter model formats or smaller datasets
+
+#### Local Development Issues
+
+1. **Port Already in Use**:
+   ```bash
+   streamlit run fraud_monitoring_dashboard.py --server.port 8502
+   ```
+
+2. **Module Import Errors**:
+   ```bash
+   pip install --upgrade -r requirements.txt
+   ```
+
+3. **Model Loading Errors**:
+   - Check file paths are correct
+   - Ensure model files exist in the project directory
+   - Verify Python version compatibility
+
+### Performance Optimization
+
+- **Model Loading**: Use `@st.cache_resource` for model caching
+- **Data Processing**: Implement `@st.cache_data` for data operations
+- **Memory Management**: Clear cache periodically with `st.cache_data.clear()`
 
 ## Model Updates
 
