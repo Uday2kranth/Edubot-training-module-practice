@@ -24,3 +24,7 @@ Thumbs.db
 *.tmp
 *.log
 *.bak
+
+# Problematic folders for deployment
+ignorables/
+.dist/
