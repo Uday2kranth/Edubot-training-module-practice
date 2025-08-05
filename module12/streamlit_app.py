@@ -8,33 +8,20 @@ import os
 @st.cache_resource
 def load_model():
     try:
-        # Try different possible paths for model files
-        model_paths = ['iris_model.pkl', './iris_model.pkl', 'module12/iris_model.pkl']
-        info_paths = ['model_info.pkl', './model_info.pkl', 'module12/model_info.pkl']
+        # Simple direct paths based on debugging results
+        model_file = 'iris_model.pkl'
+        info_file = 'model_info.pkl'
         
-        model_file = None
-        info_file = None
-        
-        # Find the model file
-        for path in model_paths:
-            if os.path.exists(path):
-                model_file = path
-                break
-                
-        # Find the info file  
-        for path in info_paths:
-            if os.path.exists(path):
-                info_file = path
-                break
-        
-        if model_file is None:
+        # Check if files exist
+        if not os.path.exists(model_file):
             st.error("Model file 'iris_model.pkl' not found!")
             return None, None
             
-        if info_file is None:
+        if not os.path.exists(info_file):
             st.error("Model info file 'model_info.pkl' not found!")
             return None, None
             
+        # Load the model and info
         model = joblib.load(model_file)
         model_info = joblib.load(info_file)
         return model, model_info
