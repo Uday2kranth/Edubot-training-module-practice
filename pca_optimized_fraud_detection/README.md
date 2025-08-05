@@ -1,7 +1,7 @@
-# PCA-Optimized Fraud Detect### Interactive Dashboardon Dashboard
+# PCA-Optimized Fraud Detection Dashboard
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.47.1-red.svg)](https://streamlit.io)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com)
 
@@ -26,7 +26,7 @@ An advanced, elder-friendly fraud detection system using machine learning with P
 - **Simple Navigation**: Intuitive tab-based interface
 - **Clear Visual Indicators**: Color-coded risk levels
 
-### � **Interactive Dashboard**
+### Interactive Dashboard
 - **Manual Transaction Input**: Check individual transactions for fraud risk
 - **Live Monitoring**: Real-time transaction monitoring and alerts
 - **Risk Analysis**: Visual distribution of fraud probabilities
@@ -65,11 +65,11 @@ cd Edubot-training-module-practice/pca_optimized_fraud_detection
 Ensure your project directory contains these files:
 ```
 pca_optimized_fraud_detection/
-├── fraud_monitoring_dashboard.py    # Main application file
-├── fraud_models_pca_optimized.pkl   # Pre-trained ML models
-├── fraud_0.1origbase.csv           # Sample dataset
-├── requirements.txt                # Python dependencies
-└── README.md                      # This documentation
+|-- fraud_monitoring_dashboard.py    # Main application file
+|-- fraud_models_pca_optimized.pkl   # Pre-trained ML models
+|-- fraud_0.1origbase.csv           # Sample dataset
+|-- requirements.txt                # Python dependencies
+|-- README.md                      # This documentation
 ```
 
 ### Step 3: Install Dependencies
@@ -156,26 +156,26 @@ To stop the application:
 
 ```
 pca_optimized_fraud_detection/
-│
-├── fraud_monitoring_dashboard.py    # Main Streamlit dashboard application
-├── pca_fraud_detection_optimized.ipynb    # Jupyter notebook for model development
-├── fraud_models_pca_optimized.pkl  # Pre-trained ML models (XGBoost + PCA)
-├── fraud_0.1origbase.csv          # Sample fraud detection dataset
-├── requirements.txt               # Python dependencies
-└── README.md                     # Project documentation
+|
+|-- fraud_monitoring_dashboard.py    # Main Streamlit dashboard application
+|-- pca_fraud_detection_optimized.ipynb    # Jupyter notebook for model development
+|-- fraud_models_pca_optimized.pkl  # Pre-trained ML models (XGBoost + PCA)
+|-- fraud_0.1origbase.csv          # Sample fraud detection dataset
+|-- requirements.txt               # Python dependencies
+|-- README.md                     # Project documentation
 ```
 
 ## Configuration
 
 ### Dependencies
 ```python
-streamlit>=1.28.0,<2.0.0  # Web dashboard framework
-pandas>=2.0.0,<3.0.0      # Data manipulation and analysis
-numpy>=1.24.0,<2.0.0      # Numerical computing
-scikit-learn>=1.3.0,<2.0.0 # Machine learning library
-xgboost>=2.0.0,<4.0.0     # Gradient boosting framework
-matplotlib>=3.6.0,<4.0.0  # Plotting library
-seaborn>=0.11.0,<1.0.0    # Statistical data visualization
+streamlit>=1.28.0      # Web dashboard framework
+pandas>=1.5.0          # Data manipulation and analysis
+numpy>=1.21.0          # Numerical computing
+scikit-learn>=1.0.0    # Machine learning library
+xgboost>=1.6.0         # Gradient boosting framework
+matplotlib>=3.5.0      # Plotting library
+seaborn>=0.11.0        # Statistical data visualization
 ```
 
 ### Model Configuration
