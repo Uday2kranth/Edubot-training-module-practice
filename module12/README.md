@@ -50,3 +50,17 @@ For Streamlit Cloud deployment:
 1. Upload files to GitHub repository
 2. Connect repository to Streamlit Cloud
 3. Deploy with one click
+
+### Deployment Requirements
+Make sure your repository includes:
+- streamlit_app.py (main app file)
+- iris_model.pkl (trained model)
+- model_info.pkl (model metadata)
+- requirements.txt (dependencies)
+
+### Troubleshooting Deployment Issues
+If you encounter errors during deployment:
+1. Check that all required files are in the repository
+2. Ensure requirements.txt has the correct dependencies
+3. Verify model files are not too large (< 100MB for Streamlit Cloud)
+4. Check app logs for specific error messages
