@@ -196,15 +196,37 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    """Load and cache the fraud dataset"""
+    """Load and cache the fraud dataset with memory optimization"""
     try:
-        data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
-        df = pd.read_csv(data_path)
+        # Use smaller sample dataset for faster deployment
+        data_path = os.path.join(SCRIPT_DIR, "fraud_sample.csv")
+        if not os.path.exists(data_path):
+            # Fallback to original dataset
+            data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
+        
+        # Load data with optimized dtypes to reduce memory usage
+        df = pd.read_csv(data_path, 
+                        dtype={
+                            'step': 'int32',
+                            'type': 'category',
+                            'amount': 'float32',
+                            'nameOrig': 'string',
+                            'oldbalanceOrg': 'float32',
+                            'newbalanceOrig': 'float32',
+                            'nameDest': 'string',
+                            'oldbalanceDest': 'float32',
+                            'newbalanceDest': 'float32',
+                            'isFraud': 'int8',
+                            'isFlaggedFraud': 'int8'
+                        })
         return df
     except FileNotFoundError:
         st.error(
-            "Dataset not found! Please ensure fraud_0.1origbase.csv is in the same directory."
+            "Dataset not found! Please ensure fraud_sample.csv or fraud_0.1origbase.csv is in the same directory."
         )
+        return None
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
         return None
 
 @st.cache_resource
