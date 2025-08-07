@@ -28,3 +28,4 @@ Thumbs.db
 # Problematic folders for deployment
 .ignorables/
 .dist/
+.ignorables
