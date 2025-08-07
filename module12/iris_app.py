@@ -134,7 +134,36 @@ def main():
         
         predicted_class = model_info['target_names'][prediction]
         st.success(f"Predicted Flower Type: **{predicted_class.title()}**")
-        
+
+        # Display flower image based on prediction
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            # Show image based on predicted flower type
+            if predicted_class.lower() == "setosa":
+                st.image(
+                    "image1b.png",
+                    caption=f"🌸 {predicted_class.title()} Iris Flower",
+                    use_container_width=True,
+                )
+            elif predicted_class.lower() == "versicolor":
+                st.image(
+                    "image1b.png",
+                    caption=f"🌺 {predicted_class.title()} Iris Flower",
+                    use_container_width=True,
+                )
+            elif predicted_class.lower() == "virginica":
+                st.image(
+                    "image1b.png",
+                    caption=f"🌷 {predicted_class.title()} Iris Flower",
+                    use_container_width=True,
+                )
+            else:
+                st.image(
+                    "image1b.png",
+                    caption=f"🌻 {predicted_class.title()} Iris Flower",
+                    use_container_width=True,
+                )
+
         # Show prediction probabilities
         st.subheader("Prediction Confidence")
         prob_df = pd.DataFrame({

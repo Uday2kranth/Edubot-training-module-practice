@@ -2,6 +2,12 @@
 
 A simple and beginner-friendly machine learning web application that predicts iris flower types based on their measurements.
 
+## 🌟 Live Demo
+
+**Try the app now!** 👉 **[🚀 Live Demo](https://uday-kranth-edubot-iris-projectv2.streamlit.app/)**
+
+*Click the link above to use the app instantly without any setup!*
+
 ## 🚀 Overview
 
 This project is designed for **beginners in Python and Machine Learning**. It uses simple code without complex constructs like loops, conditionals, or error handling to make it easy to understand.
@@ -50,11 +56,13 @@ Go to: `http://localhost:8501`
 - Interactive sliders for flower measurements
 - Colorful and intuitive design
 - Instant predictions with one click
+- **Visual flower images** showing predicted results
 
 ### 🧠 **Smart Predictions**
 - 100% accuracy on test data
 - Shows confidence levels for each prediction
 - Explains which flower type is most likely
+- **Displays flower images** based on predictions
 
 ### 📚 **Educational Content**
 - Learn about different iris flower types
