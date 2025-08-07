@@ -198,11 +198,8 @@ st.markdown("""
 def load_data():
     """Load and cache the fraud dataset with memory optimization"""
     try:
-        # Use smaller sample dataset for faster deployment
-        data_path = os.path.join(SCRIPT_DIR, "fraud_sample.csv")
-        if not os.path.exists(data_path):
-            # Fallback to original dataset
-            data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
+        # Use original dataset - packages.txt was causing deployment issues
+        data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
         
         # Load data with optimized dtypes to reduce memory usage
         df = pd.read_csv(data_path, 
@@ -222,7 +219,7 @@ def load_data():
         return df
     except FileNotFoundError:
         st.error(
-            "Dataset not found! Please ensure fraud_sample.csv or fraud_0.1origbase.csv is in the same directory."
+            "Dataset not found! Please ensure fraud_0.1origbase.csv is in the same directory."
         )
         return None
     except Exception as e:
