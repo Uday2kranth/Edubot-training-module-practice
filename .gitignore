@@ -26,5 +26,5 @@ Thumbs.db
 *.bak
 
 # Problematic folders for deployment
-ignorables/
+.ignorables/
 .dist/
