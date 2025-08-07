@@ -201,21 +201,36 @@ def load_data():
         # Use original dataset - packages.txt was causing deployment issues
         data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
         
-        # Load data with optimized dtypes to reduce memory usage
-        df = pd.read_csv(data_path, 
-                        dtype={
-                            'step': 'int32',
-                            'type': 'category',
-                            'amount': 'float32',
-                            'nameOrig': 'string',
-                            'oldbalanceOrg': 'float32',
-                            'newbalanceOrig': 'float32',
-                            'nameDest': 'string',
-                            'oldbalanceDest': 'float32',
-                            'newbalanceDest': 'float32',
-                            'isFraud': 'int8',
-                            'isFlaggedFraud': 'int8'
-                        })
+        # For Streamlit Cloud: Sample the data to prevent memory issues
+        # Load in chunks and sample to reduce memory usage
+        chunk_size = 50000
+        chunks = []
+        for chunk in pd.read_csv(data_path, chunksize=chunk_size):
+            # Sample each chunk to reduce total size
+            sampled_chunk = chunk.sample(n=min(10000, len(chunk)), random_state=42)
+            chunks.append(sampled_chunk)
+            # Limit total rows to prevent memory issues
+            if len(chunks) * 10000 >= 100000:  # Max 100K rows
+                break
+        
+        df = pd.concat(chunks, ignore_index=True)
+        
+        # Apply optimized dtypes to reduce memory usage
+        df = df.astype({
+            'step': 'int32',
+            'type': 'category',
+            'amount': 'float32',
+            'nameOrig': 'string',
+            'oldbalanceOrg': 'float32',
+            'newbalanceOrig': 'float32',
+            'nameDest': 'string',
+            'oldbalanceDest': 'float32',
+            'newbalanceDest': 'float32',
+            'isFraud': 'int8',
+            'isFlaggedFraud': 'int8'
+        })
+        
+        print(f"Dataset loaded: {len(df):,} rows (sampled from original for deployment)")
         return df
     except FileNotFoundError:
         st.error(
