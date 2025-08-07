@@ -7,7 +7,11 @@ import seaborn as sns
 from datetime import datetime
 import time
 import warnings
+import os
 warnings.filterwarnings('ignore')
+
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Set matplotlib style for better plots
 plt.style.use('default')
@@ -188,7 +192,8 @@ st.markdown("""
 def load_data():
     """Load and cache the fraud dataset"""
     try:
-        df = pd.read_csv('fraud_0.1origbase.csv')
+        data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
+        df = pd.read_csv(data_path)
         return df
     except FileNotFoundError:
         st.error("❌ Dataset not found! Please ensure fraud_0.1origbase.csv is in the same directory.")
@@ -198,7 +203,8 @@ def load_data():
 def load_models():
     """Load and cache the trained PCA-optimized models"""
     try:
-        with open('fraud_models_pca_optimized.pkl', 'rb') as f:
+        model_path = os.path.join(SCRIPT_DIR, "fraud_models_pca_optimized.pkl")
+        with open(model_path, "rb") as f:
             model_package = pickle.load(f)
         return model_package
     except FileNotFoundError:
