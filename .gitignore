@@ -11,6 +11,7 @@ __pycache__/
 venv/
 env/
 ENV/
+.venv/
 
 # IDE files
 .vscode/
@@ -29,3 +30,8 @@ Thumbs.db
 .ignorables/
 .dist/
 .ignorables
+
+# Additional deployment issues
+**/requirements_*.txt
+**/.venv/
+**/factor_analysis_fraud_detection.py
