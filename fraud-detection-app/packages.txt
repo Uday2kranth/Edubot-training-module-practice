@@ -1,0 +1,2 @@
+# No system packages needed for this fraud detection app
+# matplotlib uses Agg backend which doesn't require graphics libraries
