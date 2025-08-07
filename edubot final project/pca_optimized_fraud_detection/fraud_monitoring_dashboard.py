@@ -2,13 +2,19 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import warnings
+import os
+
+warnings.filterwarnings("ignore")
+
+# Configure matplotlib backend before importing pyplot (fix for Streamlit Cloud)
+import matplotlib
+
+matplotlib.use("Agg")  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 import time
-import warnings
-import os
-warnings.filterwarnings('ignore')
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
