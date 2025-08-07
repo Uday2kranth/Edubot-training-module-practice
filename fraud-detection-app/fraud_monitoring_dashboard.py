@@ -198,39 +198,28 @@ st.markdown("""
 def load_data():
     """Load and cache the fraud dataset with memory optimization"""
     try:
-        # Use original dataset - packages.txt was causing deployment issues
+        # Use original dataset - now that deployment works with correct config
         data_path = os.path.join(SCRIPT_DIR, "fraud_0.1origbase.csv")
-        
-        # For Streamlit Cloud: Sample the data to prevent memory issues
-        # Load in chunks and sample to reduce memory usage
-        chunk_size = 50000
-        chunks = []
-        for chunk in pd.read_csv(data_path, chunksize=chunk_size):
-            # Sample each chunk to reduce total size
-            sampled_chunk = chunk.sample(n=min(10000, len(chunk)), random_state=42)
-            chunks.append(sampled_chunk)
-            # Limit total rows to prevent memory issues
-            if len(chunks) * 10000 >= 100000:  # Max 100K rows
-                break
-        
-        df = pd.concat(chunks, ignore_index=True)
-        
-        # Apply optimized dtypes to reduce memory usage
-        df = df.astype({
-            'step': 'int32',
-            'type': 'category',
-            'amount': 'float32',
-            'nameOrig': 'string',
-            'oldbalanceOrg': 'float32',
-            'newbalanceOrig': 'float32',
-            'nameDest': 'string',
-            'oldbalanceDest': 'float32',
-            'newbalanceDest': 'float32',
-            'isFraud': 'int8',
-            'isFlaggedFraud': 'int8'
-        })
-        
-        print(f"Dataset loaded: {len(df):,} rows (sampled from original for deployment)")
+
+        # Load data with optimized dtypes to reduce memory usage
+        df = pd.read_csv(
+            data_path,
+            dtype={
+                "step": "int32",
+                "type": "category",
+                "amount": "float32",
+                "nameOrig": "string",
+                "oldbalanceOrg": "float32",
+                "newbalanceOrig": "float32",
+                "nameDest": "string",
+                "oldbalanceDest": "float32",
+                "newbalanceDest": "float32",
+                "isFraud": "int8",
+                "isFlaggedFraud": "int8",
+            },
+        )
+
+        print(f"Dataset loaded: {len(df):,} rows (full original dataset)")
         return df
     except FileNotFoundError:
         st.error(
@@ -474,47 +463,12 @@ def process_manual_transaction(transaction_data, model_package):
     xgb_pred, xgb_prob = predict_fraud_probability(model_package["xgb_model"], X_pca)
     
     return {
-        'rf_prediction': rf_pred[0],
-        'rf_probability': rf_prob[0],
-        'xgb_prediction': xgb_pred[0],
-        'xgb_probability': xgb_prob[0],
-        'transaction_data': transaction_data
+        "rf_prediction": rf_pred[0],
+        "rf_probability": rf_prob[0],
+        "xgb_prediction": xgb_pred[0],
+        "xgb_probability": xgb_prob[0],
+        "transaction_data": transaction_data,
     }
-    """Preprocess data for prediction"""
-    data = df.copy()
-
-    # Handle missing values
-    data = data.dropna()
-
-    # Label encode categorical variables
-    if "type" in data.columns:
-        data["type"] = label_encoder.transform(data["type"])
-    if "nameOrig" in data.columns:
-        data["nameOrig"] = label_encoder.transform(data["nameOrig"])
-    if "nameDest" in data.columns:
-        data["nameDest"] = label_encoder.transform(data["nameDest"])
-
-    # Feature engineering
-    data["balance_change_orig"] = data["newbalanceOrig"] - data["oldbalanceOrg"]
-    data["balance_change_dest"] = data["newbalanceDest"] - data["oldbalanceDest"]
-    data["amount_to_balance_ratio"] = data["amount"] / (data["oldbalanceOrg"] + 1)
-    data["zero_balance_orig"] = (data["oldbalanceOrg"] == 0).astype(int)
-    data["zero_balance_dest"] = (data["oldbalanceDest"] == 0).astype(int)
-    data["amount_log"] = np.log1p(data["amount"])
-
-    # Remove target variable if present
-    if "isFraud" in data.columns:
-        X = data.drop("isFraud", axis=1)
-        y = data["isFraud"]
-    else:
-        X = data
-        y = None
-
-    # Scale and apply PCA
-    X_scaled = scaler.transform(X)
-    X_pca = pca.transform(X_scaled)
-
-    return X_pca, y
 
 def predict_fraud_probability(model, X_pca):
     """Get fraud probability predictions"""
@@ -565,13 +519,15 @@ def main():
     )
 
     # Sample size for analysis
-    max_sample = min(100000, len(df))  # Cap at 100K for performance
+    max_sample = len(
+        df
+    )  # Use full dataset - deployment now works with flexible dependencies
     sample_size = st.sidebar.slider(
         "Sample Size for Analysis",
         min_value=1000,
         max_value=max_sample,
-        value=min(50000, len(df)),
-        step=1000,
+        value=min(100000, len(df)),  # Default to 100K but allow full dataset selection
+        step=5000,  # Larger steps for better performance with big dataset
         help="Number of transactions to analyze (larger samples take more time)",
     )
     
@@ -784,9 +740,9 @@ def main():
             st.metric(
                 "⚠️ High Risk Alerts",
                 f"{high_risk_transactions:,}",
-                delta=f"{high_risk_transactions/total_transactions*100:.2f}% of total",
+                delta=f"Avg Risk: {avg_risk_score:.2%}",
                 delta_color="inverse",
-                help="Transactions flagged as high risk for fraud"
+                help="Transactions flagged as high risk for fraud",
             )
         
         with col3:
