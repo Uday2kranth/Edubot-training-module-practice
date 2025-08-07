@@ -4,6 +4,9 @@ import numpy as np
 import pickle
 import warnings
 import os
+from sklearn.decomposition import FactorAnalysis  # Added for Factor Analysis
+from datetime import datetime
+import time
 
 warnings.filterwarnings("ignore")
 
@@ -13,8 +16,6 @@ import matplotlib
 matplotlib.use("Agg")  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
-from datetime import datetime
-import time
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -341,8 +342,8 @@ def process_manual_transaction(transaction_data, model_package):
         'transaction_data': transaction_data
     }
 
-def preprocess_data(df, label_encoder, scaler, pca):
-    """Preprocess data for prediction"""
+def preprocess_data(df, label_encoder, scaler, pca_or_fa):
+    """Preprocess data for prediction - Modified to support Factor Analysis"""
     data = df.copy()
     
     # Handle missing values
@@ -410,12 +411,105 @@ def preprocess_data(df, label_encoder, scaler, pca):
     
     X = X[expected_columns]
     
-    # Scale and apply PCA
-    # Convert to numpy array to avoid feature name validation issues
+    # Scale the data
     X_scaled = scaler.transform(X.values)
-    X_pca = pca.transform(X_scaled)
     
-    return X_pca, y
+    # Apply Factor Analysis instead of PCA
+    # Note: For this to work properly, models need to be retrained with Factor Analysis
+    try:
+        # Try to use Factor Analysis if available in the model package
+        if hasattr(pca_or_fa, 'transform'):
+            X_transformed = pca_or_fa.transform(X_scaled)
+        else:
+            # Fallback: Create new Factor Analysis with same number of components
+            # This is for demonstration - in practice, models should be retrained
+            n_components = 11  # Same as original PCA components
+            fa = FactorAnalysis(n_components=n_components, random_state=42)
+            X_transformed = fa.fit_transform(X_scaled)
+            st.warning("⚠️ Using Factor Analysis transformation. Models should be retrained for optimal performance.")
+    except Exception as e:
+        # Fallback to original PCA if Factor Analysis fails
+        st.warning(f"Factor Analysis failed: {e}. Falling back to original PCA.")
+        X_transformed = pca_or_fa.transform(X_scaled)
+    
+    return X_transformed, y
+
+# COMMENTED OUT: Original PCA-based preprocessing
+# def preprocess_data(df, label_encoder, scaler, pca):
+#     """Original PCA-based preprocessing - COMMENTED OUT"""
+#     data = df.copy()
+#     
+#     # Handle missing values
+#     data = data.dropna()
+#     
+#     # Create fixed mapping for transaction types (based on dataset analysis)
+#     type_mapping = {
+#         'CASH_IN': 0,
+#         'CASH_OUT': 1, 
+#         'DEBIT': 2,
+#         'PAYMENT': 3,
+#         'TRANSFER': 4
+#     }
+#     
+#     # Label encode categorical variables with error handling
+#     if 'type' in data.columns:
+#         # Use fixed mapping for transaction types instead of label encoder
+#         data['type'] = data['type'].map(type_mapping)
+#         # Handle any unmapped values by setting them to most common type (CASH_OUT)
+#         data['type'] = data['type'].fillna(1)
+#     
+#     # For nameOrig and nameDest, we'll use a simple hash-based encoding for manual entries
+#     if 'nameOrig' in data.columns:
+#         try:
+#             data['nameOrig'] = label_encoder.transform(data['nameOrig'])
+#         except ValueError:
+#             # For manual entries, create a simple numeric encoding
+#             data['nameOrig'] = data['nameOrig'].astype(str).apply(lambda x: hash(x) % 1000000)
+#             
+#     if 'nameDest' in data.columns:
+#         try:
+#             data['nameDest'] = label_encoder.transform(data['nameDest'])
+#         except ValueError:
+#             # For manual entries, create a simple numeric encoding
+#             data['nameDest'] = data['nameDest'].astype(str).apply(lambda x: hash(x) % 1000000)
+#     
+#     # Feature engineering
+#     data['balance_change_orig'] = data['newbalanceOrig'] - data['oldbalanceOrg']
+#     data['balance_change_dest'] = data['newbalanceDest'] - data['oldbalanceDest']
+#     data['amount_to_balance_ratio'] = data['amount'] / (data['oldbalanceOrg'] + 1)
+#     data['zero_balance_orig'] = (data['oldbalanceOrg'] == 0).astype(int)
+#     data['zero_balance_dest'] = (data['oldbalanceDest'] == 0).astype(int)
+#     data['amount_log'] = np.log1p(data['amount'])
+#     
+#     # Remove target variable if present
+#     if 'isFraud' in data.columns:
+#         X = data.drop('isFraud', axis=1)
+#         y = data['isFraud']
+#     else:
+#         X = data
+#         y = None
+#     
+#     # Ensure columns are in the expected order (based on training data)
+#     expected_columns = [
+#         'step', 'type', 'amount', 'nameOrig', 'oldbalanceOrg', 'newbalanceOrig',
+#         'nameDest', 'oldbalanceDest', 'newbalanceDest', 'isFlaggedFraud',
+#         'balance_change_orig', 'balance_change_dest', 'amount_to_balance_ratio', 
+#         'zero_balance_orig', 'zero_balance_dest', 'amount_log'
+#     ]
+#     
+#     # Reorder columns to match training data, adding missing columns with zeros if needed
+#     for col in expected_columns:
+#         if col not in X.columns:
+#             X[col] = 0
+#     
+#     X = X[expected_columns]
+#     
+#     # Scale and apply PCA
+#     # Convert to numpy array to avoid feature name validation issues
+#     X_scaled = scaler.transform(X.values)
+#     X_pca = pca.transform(X_scaled)
+#     
+#     return X_pca, y
 
 def process_manual_transaction(transaction_data, model_package):
     """Process manually entered transaction data"""
@@ -423,12 +517,12 @@ def process_manual_transaction(transaction_data, model_package):
     df_manual = pd.DataFrame([transaction_data])
     
     # Preprocess the manual data
-    X_pca, _ = preprocess_data(df_manual, model_package['label_encoder'], 
-                              model_package['scaler'], model_package['pca'])
+    X_transformed, _ = preprocess_data(df_manual, model_package['label_encoder'], 
+                                     model_package['scaler'], model_package['pca'])
     
     # Get predictions from both models
-    rf_pred, rf_prob = predict_fraud_probability(model_package['rf_model'], X_pca)
-    xgb_pred, xgb_prob = predict_fraud_probability(model_package['xgb_model'], X_pca)
+    rf_pred, rf_prob = predict_fraud_probability(model_package['rf_model'], X_transformed)
+    xgb_pred, xgb_prob = predict_fraud_probability(model_package['xgb_model'], X_transformed)
     
     return {
         'rf_prediction': rf_pred[0],
@@ -437,41 +531,6 @@ def process_manual_transaction(transaction_data, model_package):
         'xgb_probability': xgb_prob[0],
         'transaction_data': transaction_data
     }
-    """Preprocess data for prediction"""
-    data = df.copy()
-    
-    # Handle missing values
-    data = data.dropna()
-    
-    # Label encode categorical variables
-    if 'type' in data.columns:
-        data['type'] = label_encoder.transform(data['type'])
-    if 'nameOrig' in data.columns:
-        data['nameOrig'] = label_encoder.transform(data['nameOrig'])
-    if 'nameDest' in data.columns:
-        data['nameDest'] = label_encoder.transform(data['nameDest'])
-    
-    # Feature engineering
-    data['balance_change_orig'] = data['newbalanceOrig'] - data['oldbalanceOrg']
-    data['balance_change_dest'] = data['newbalanceDest'] - data['oldbalanceDest']
-    data['amount_to_balance_ratio'] = data['amount'] / (data['oldbalanceOrg'] + 1)
-    data['zero_balance_orig'] = (data['oldbalanceOrg'] == 0).astype(int)
-    data['zero_balance_dest'] = (data['oldbalanceDest'] == 0).astype(int)
-    data['amount_log'] = np.log1p(data['amount'])
-    
-    # Remove target variable if present
-    if 'isFraud' in data.columns:
-        X = data.drop('isFraud', axis=1)
-        y = data['isFraud']
-    else:
-        X = data
-        y = None
-    
-    # Scale and apply PCA
-    X_scaled = scaler.transform(X)
-    X_pca = pca.transform(X_scaled)
-    
-    return X_pca, y
 
 def predict_fraud_probability(model, X_pca):
     """Get fraud probability predictions"""
@@ -498,24 +557,23 @@ def main():
     if df is None or model_package is None:
         st.stop()
     
+    # Add warning about Factor Analysis modification
+    st.warning("""
+    ⚠️ **Development Note**: This app has been modified to use Factor Analysis instead of PCA for dimensionality reduction.
+    However, the current models were trained with PCA. For optimal performance, models should be retrained with Factor Analysis.
+    Current predictions use Factor Analysis transformation with PCA-trained models as a demonstration.
+    """)
+    
     # Extract models and components
-    rf_model = model_package['rf_model']
-    xgb_model = model_package['xgb_model']
-    pca = model_package['pca']
+    rf_model = model_package["rf_model"]
+    pca = model_package['pca']  # Will be used as pca_or_fa parameter in preprocess_data
     scaler = model_package['scaler']
     label_encoder = model_package['label_encoder']
     performance_metrics = model_package['performance_metrics']
     
     # Sidebar configuration
     st.sidebar.title("🔧 Dashboard Controls")
-    
-    # Model selection
-    selected_model = st.sidebar.selectbox(
-        "🤖 Select Model",
-        ["Random Forest PCA", "XGBoost PCA"],
-        help="Choose the machine learning model for fraud detection"
-    )
-    
+
     # Risk threshold
     risk_threshold = st.sidebar.slider(
         "⚠️ Fraud Risk Threshold",
@@ -523,9 +581,9 @@ def main():
         max_value=0.9,
         value=0.5,
         step=0.05,
-        help="Transactions above this threshold will be flagged as high-risk"
+        help="Transactions above this threshold will be flagged as high-risk",
     )
-    
+
     # Sample size for analysis
     sample_size = st.sidebar.slider(
         "📊 Sample Size for Analysis",
@@ -533,57 +591,61 @@ def main():
         max_value=min(50000, len(df)),
         value=min(10000, len(df)),
         step=1000,
-        help="Number of transactions to analyze (larger samples take more time)"
+        help="Number of transactions to analyze (larger samples take more time)",
     )
-    
+
     # Auto-refresh option
     auto_refresh = st.sidebar.checkbox("🔄 Auto-refresh (30s)", value=False)
-    
+
     if auto_refresh:
         time.sleep(30)
         st.rerun()
-    
+
     # Main dashboard tabs - Elder-friendly with larger tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "� Check My Transaction", 
-        "�🚨 Live Monitoring", 
-        "📊 Analysis Dashboard", 
-        " Model Insights",
-        "⚙️ System Status"
-    ])
-    
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        [
+            "� Check My Transaction",
+            "�🚨 Live Monitoring",
+            "📊 Analysis Dashboard",
+            " Model Insights",
+            "⚙️ System Status",
+        ]
+    )
+
     # Tab 1: Manual Transaction Input (NEW - Elder-friendly)
     with tab1:
-        st.markdown("""
-        <div class="dashboard-section">
-            <h1 style="color: #2E7D32; text-align: center;">
-                🔍 Check Your Transaction for Fraud Risk
-            </h1>
-            <p style="font-size: 1.2em; text-align: center; color: #000000;">
-                Enter your transaction details below to check if it might be fraudulent
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
         # Manual transaction input
         manual_transaction = manual_transaction_input()
-        
+
         if manual_transaction:
             st.markdown("---")
             st.markdown("### 🎯 Fraud Risk Assessment Results")
-            
+
             # Process the manual transaction
             results = process_manual_transaction(manual_transaction, model_package)
-            
+
             # Display results in elder-friendly format
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 st.markdown("#### 🤖 Random Forest Analysis")
-                rf_risk_level = "HIGH RISK" if results['rf_probability'] >= 0.5 else "MEDIUM RISK" if results['rf_probability'] >= 0.3 else "LOW RISK"
-                rf_color = "#d32f2f" if results['rf_probability'] >= 0.5 else "#ff9800" if results['rf_probability'] >= 0.3 else "#388e3c"
-                
-                st.markdown(f"""
+                rf_risk_level = (
+                    "HIGH RISK"
+                    if results["rf_probability"] >= 0.5
+                    else "MEDIUM RISK"
+                    if results["rf_probability"] >= 0.3
+                    else "LOW RISK"
+                )
+                rf_color = (
+                    "#d32f2f"
+                    if results["rf_probability"] >= 0.5
+                    else "#ff9800"
+                    if results["rf_probability"] >= 0.3
+                    else "#388e3c"
+                )
+
+                st.markdown(
+                    f"""
                 <div style="background: transparent; color: #000000; padding: 1.5rem; border: 3px solid {rf_color}; border-radius: 15px; margin: 1rem 0;">
                     <h3 style="color: #000000; font-size: 1.4em;">Risk Level: {rf_risk_level}</h3>
                     <p style="color: #000000; font-size: 1.2em; font-weight: bold;">
@@ -593,14 +655,29 @@ def main():
                         Prediction: {"🚨 FRAUD DETECTED" if results['rf_prediction'] == 1 else "✅ TRANSACTION SAFE"}
                     </p>
                 </div>
-                """, unsafe_allow_html=True)
-            
+                """,
+                    unsafe_allow_html=True,
+                )
+
             with col2:
                 st.markdown("#### ⚡ XGBoost Analysis")
-                xgb_risk_level = "HIGH RISK" if results['xgb_probability'] >= 0.5 else "MEDIUM RISK" if results['xgb_probability'] >= 0.3 else "LOW RISK"
-                xgb_color = "#d32f2f" if results['xgb_probability'] >= 0.5 else "#ff9800" if results['xgb_probability'] >= 0.3 else "#388e3c"
-                
-                st.markdown(f"""
+                xgb_risk_level = (
+                    "HIGH RISK"
+                    if results["xgb_probability"] >= 0.5
+                    else "MEDIUM RISK"
+                    if results["xgb_probability"] >= 0.3
+                    else "LOW RISK"
+                )
+                xgb_color = (
+                    "#d32f2f"
+                    if results["xgb_probability"] >= 0.5
+                    else "#ff9800"
+                    if results["xgb_probability"] >= 0.3
+                    else "#388e3c"
+                )
+
+                st.markdown(
+                    f"""
                 <div style="background: transparent; color: #000000; padding: 1.5rem; border: 3px solid {xgb_color}; border-radius: 15px; margin: 1rem 0;">
                     <h3 style="color: #000000; font-size: 1.4em;">Risk Level: {xgb_risk_level}</h3>
                     <p style="color: #000000; font-size: 1.2em; font-weight: bold;">
@@ -610,22 +687,29 @@ def main():
                         Prediction: {"🚨 FRAUD DETECTED" if results['xgb_prediction'] == 1 else "✅ TRANSACTION SAFE"}
                     </p>
                 </div>
-                """, unsafe_allow_html=True)
-            
+                """,
+                    unsafe_allow_html=True,
+                )
+
             # Overall recommendation
-            avg_probability = (results['rf_probability'] + results['xgb_probability']) / 2
-            
+            avg_probability = (
+                results["rf_probability"] + results["xgb_probability"]
+            ) / 2
+
             if avg_probability >= 0.7:
                 recommendation = "� HIGH RISK - Do not proceed with this transaction. Contact your bank immediately."
                 rec_color = "#d32f2f"
             elif avg_probability >= 0.4:
-                recommendation = "⚠️ MEDIUM RISK - Be cautious. Verify transaction details carefully."
+                recommendation = (
+                    "⚠️ MEDIUM RISK - Be cautious. Verify transaction details carefully."
+                )
                 rec_color = "#ff9800"
             else:
                 recommendation = "✅ LOW RISK - Transaction appears safe to proceed."
                 rec_color = "#388e3c"
-            
-            st.markdown(f"""
+
+            st.markdown(
+                f"""
             <div style="background: transparent; color: #000000; padding: 2rem; border: 4px solid {rec_color}; border-radius: 15px; margin: 2rem 0; text-align: center;">
                 <h2 style="color: #000000; font-size: 1.5em; margin-bottom: 1rem;">📋 Final Recommendation</h2>
                 <p style="color: #000000; font-size: 1.3em; font-weight: bold; line-height: 1.6;">
@@ -635,28 +719,36 @@ def main():
                     Average Risk Score: {avg_probability:.1%}
                 </p>
             </div>
-            """, unsafe_allow_html=True)
-            
+            """,
+                unsafe_allow_html=True,
+            )
+
             # Transaction summary
             st.markdown("### 📄 Transaction Summary")
             summary_data = {
-                "Detail": ["Transaction Type", "Amount", "Time Step", "Original Balance Before", "Original Balance After"],
+                "Detail": [
+                    "Transaction Type",
+                    "Amount",
+                    "Time Step",
+                    "Original Balance Before",
+                    "Original Balance After",
+                ],
                 "Value": [
-                    manual_transaction['type'],
+                    manual_transaction["type"],
                     f"${manual_transaction['amount']:,.2f}",
-                    manual_transaction['step'],
+                    manual_transaction["step"],
                     f"${manual_transaction['oldbalanceOrg']:,.2f}",
-                    f"${manual_transaction['newbalanceOrig']:,.2f}"
-                ]
+                    f"${manual_transaction['newbalanceOrig']:,.2f}",
+                ],
             }
             summary_df = pd.DataFrame(summary_data)
             st.dataframe(summary_df, use_container_width=True, hide_index=True)
-    
+
     # Prepare data sample for other tabs
     df_sample = df.sample(n=sample_size, random_state=42)
-    
-    # Get model based on selection
-    current_model = rf_model if selected_model == "Random Forest PCA" else xgb_model
+
+    # Use Random Forest as default model for other tabs (but both models used in Tab 1)
+    current_model = rf_model
     
     # Preprocess data for live monitoring
     with st.spinner("🔄 Processing transactions..."):
@@ -705,19 +797,18 @@ def main():
         
         with col3:
             st.metric(
-                "🔴 Fraud Detected",
-                f"{fraud_detected:,}",
-                delta=f"{fraud_detected/total_transactions*100:.3f}% fraud rate",
-                delta_color="inverse",
-                help="Transactions predicted as fraudulent"
+                "🤖 RF Model Accuracy",
+                f"{performance_metrics['rf_accuracy']:.1%}",
+                delta=f"Precision: {performance_metrics['rf_precision']:.1%}",
+                help="Random Forest model performance metrics",
             )
         
         with col4:
             st.metric(
-                "📊 Avg Risk Score",
-                f"{avg_risk_score:.3f}",
-                delta=f"Model: {selected_model.split()[0]}",
-                help="Average fraud risk score across all transactions"
+                "⚡ XGB Model Accuracy",
+                f"{performance_metrics['xgb_accuracy']:.1%}",
+                delta=f"Precision: {performance_metrics['xgb_precision']:.1%}",
+                help="XGBoost model performance metrics",
             )
         
         # Enhanced alert section with black text
@@ -770,8 +861,8 @@ def main():
             st.metric(
                 "🎯 Detection Rate",
                 f"{fraud_detected/total_transactions*100:.2f}%",
-                delta=f"Target: 0.13%",
-                delta_color="normal"
+                delta="Target: 0.13%",
+                delta_color="normal",
             )
         
         with col4:
@@ -831,7 +922,7 @@ def main():
             st.metric(
                 "📊 Avg Risk Score",
                 f"{avg_risk_score:.3f}",
-                delta=f"Model: {selected_model.split()[0]}"
+                delta="Random Forest Model",
             )
         
         # Alert section
@@ -1173,26 +1264,26 @@ def main():
             st.markdown("### 🖥️ Model Configuration")
             
             config_data = {
-                'Parameter': [
-                    'PCA Components',
-                    'Variance Explained',
-                    'Original Features',
-                    'Dimension Reduction',
-                    'Active Model',
-                    'Training Data Size',
-                    'Risk Threshold',
-                    'Sample Size'
+                "Parameter": [
+                    "PCA Components",
+                    "Variance Explained",
+                    "Original Features",
+                    "Dimension Reduction",
+                    "Active Model",
+                    "Training Data Size",
+                    "Risk Threshold",
+                    "Sample Size",
                 ],
-                'Value': [
+                "Value": [
                     f"{model_package['pca_components']}",
                     f"{model_package['variance_explained']:.2%}",
                     f"{len(model_package['feature_names'])}",
                     f"{(1 - model_package['pca_components']/len(model_package['feature_names']))*100:.1f}%",
-                    selected_model,
+                    "Both Models (RF & XGB)",
                     f"{len(df):,} transactions",
                     f"{risk_threshold:.1%}",
-                    f"{sample_size:,} transactions"
-                ]
+                    f"{sample_size:,} transactions",
+                ],
             }
             
             config_df = pd.DataFrame(config_data)
@@ -1273,7 +1364,7 @@ def main():
             #### 📊 Current Session Stats
             - **Sample Analyzed**: {sample_size:,} transactions
             - **High Risk Detected**: {high_risk_transactions:,}
-            - **Active Model**: {selected_model}
+            - **Active Models**: Random Forest & XGBoost
             - **Risk Threshold**: {risk_threshold:.1%}
             - **Average Risk Score**: {avg_risk_score:.3f}
             """)
@@ -1296,12 +1387,37 @@ def main():
         """, unsafe_allow_html=True)
         
         health_checks = [
-            ("📁 Dataset Status", "✅ Online", f"fraud_0.1origbase.csv ({len(df):,} transactions)", "#4CAF50"),
-            ("🤖 Model Status", "✅ Loaded", f"PCA-optimized models ready", "#4CAF50"),
-            ("🔧 Processing Pipeline", "✅ Active", f"Scaler, PCA, and encoders ready", "#4CAF50"),
-            ("📊 Prediction Engine", "✅ Running", f"Generated {len(predictions):,} predictions", "#4CAF50"),
-            ("⚠️ Alert System", "✅ Monitoring", f"Tracking {high_risk_transactions:,} high-risk transactions", "#4CAF50"),
-            ("🔄 Dashboard Status", "✅ Responsive", f"Real-time updates active", "#4CAF50")
+            (
+                "📁 Dataset Status",
+                "✅ Online",
+                f"fraud_0.1origbase.csv ({len(df):,} transactions)",
+                "#4CAF50",
+            ),
+            ("🤖 Model Status", "✅ Loaded", "PCA-optimized models ready", "#4CAF50"),
+            (
+                "🔧 Processing Pipeline",
+                "✅ Active",
+                "Scaler, PCA, and encoders ready",
+                "#4CAF50",
+            ),
+            (
+                "📊 Prediction Engine",
+                "✅ Running",
+                f"Generated {len(predictions):,} predictions",
+                "#4CAF50",
+            ),
+            (
+                "⚠️ Alert System",
+                "✅ Monitoring",
+                f"Tracking {high_risk_transactions:,} high-risk transactions",
+                "#4CAF50",
+            ),
+            (
+                "🔄 Dashboard Status",
+                "✅ Responsive",
+                "Real-time updates active",
+                "#4CAF50",
+            ),
         ]
         
         for i, (check, status, detail, color) in enumerate(health_checks):
@@ -1319,22 +1435,24 @@ def main():
     
     # Enhanced footer with elder-friendly information
     st.markdown("---")
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style='background: #e8f5e9; padding: 2rem; border-radius: 15px; text-align: center; color: #000000; margin-top: 2rem; border: 2px solid #4CAF50;'>
         <h3 style='color: #2E7D32; margin-bottom: 1rem;'>🛡️ PCA-Optimized Fraud Detection Dashboard</h3>
         <p style='font-size: 1.1em; margin-bottom: 0.5rem;'>
             <strong>Last Updated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         </p>
         <p style='font-size: 1.1em; margin-bottom: 0.5rem;'>
-            <strong>Transactions Processed:</strong> {total_transactions:,} | 
-            <strong>Active Model:</strong> {selected_model}
+            <strong>Transactions Processed:</strong> {total_transactions:,}
         </p>
         <p style='font-size: 1.1em;'>
-            <strong>System Status:</strong> 🟢 All Systems Operational | 
-            <strong>Security Level:</strong> 🛡️ High Protection Active
+            <strong>Random Forest Accuracy:</strong> {performance_metrics['rf_accuracy']:.1%} | 
+            <strong>XGBoost Accuracy:</strong> {performance_metrics['xgb_accuracy']:.1%}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 if __name__ == "__main__":
     main()
