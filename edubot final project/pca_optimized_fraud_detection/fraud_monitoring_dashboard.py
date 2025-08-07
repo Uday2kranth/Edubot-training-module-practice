@@ -26,7 +26,7 @@ sns.set_palette("husl")
 # Configure Streamlit page
 st.set_page_config(
     page_title="PCA-Optimized Fraud Detection Dashboard",
-    page_icon="🛡️",
+    page_icon="�",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -548,13 +548,12 @@ def main():
         st.rerun()
 
     # Main dashboard tabs - Elder-friendly with larger tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    tab1, tab2, tab3, tab4 = st.tabs(
         [
             "Check My Transaction",
             "Live Monitoring",
             "Analysis Dashboard",
             "Model Insights",
-            "System Status",
         ]
     )
 
@@ -643,7 +642,7 @@ def main():
             ) / 2
 
             if avg_probability >= 0.7:
-                recommendation = "� HIGH RISK - Do not proceed with this transaction. Contact your bank immediately."
+                recommendation = "HIGH RISK - Do not proceed with this transaction. Contact your bank immediately."
                 rec_color = "#d32f2f"
             elif avg_probability >= 0.4:
                 recommendation = (
@@ -822,78 +821,8 @@ def main():
                 delta_color="normal"
             )
         
-        # Simple risk distribution chart
-        st.markdown("### � Risk Analysis Overview")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Risk distribution histogram using matplotlib
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.hist(probabilities, bins=30, alpha=0.7, color='steelblue', edgecolor='black')
-            ax.axvline(x=risk_threshold, color='red', linestyle='--', linewidth=2, 
-                      label=f'Risk Threshold ({risk_threshold:.1%})')
-            ax.set_xlabel('Fraud Probability')
-            ax.set_ylabel('Number of Transactions')
-            ax.set_title('Transaction Risk Score Distribution')
-            ax.legend()
-            plt.tight_layout()
-            st.pyplot(fig)
-            plt.close()
-        
-        with col2:
-            # Risk category distribution
-            risk_categories = ['Low Risk', 'Medium Risk', 'High Risk']
-            risk_counts = [
-                np.sum(probabilities < 0.3),
-                np.sum((probabilities >= 0.3) & (probabilities < risk_threshold)),
-                np.sum(probabilities >= risk_threshold)
-            ]
-            
-            fig, ax = plt.subplots(figsize=(10, 6))
-            colors = ['#4CAF50', '#FFC107', '#f44336']
-            ax.pie(risk_counts, labels=risk_categories, colors=colors, autopct='%1.1f%%', 
-                   startangle=90)
-            ax.set_title('Risk Category Distribution')
-            plt.tight_layout()
-            st.pyplot(fig)
-            plt.close()
-        
-        with col3:
-            st.metric(
-                "🔴 Fraud Detected",
-                f"{fraud_detected:,}",
-                delta=f"{fraud_detected/total_transactions*100:.3f}% fraud rate",
-                delta_color="inverse"
-            )
-        
-        with col4:
-            st.metric(
-                "📊 Avg Risk Score",
-                f"{avg_risk_score:.3f}",
-                delta="Random Forest Model",
-            )
-        
-        # Alert section
-        if high_risk_transactions > 0:
-            st.markdown(f"""
-            <div class="alert-card">
-                <h3>🚨 ACTIVE ALERTS</h3>
-                <p><strong>{high_risk_transactions}</strong> transactions flagged as high-risk!</p>
-                <p>Immediate attention required for fraud prevention.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="success-card">
-                <h3>✅ ALL CLEAR</h3>
-                <p>No high-risk transactions detected in current sample.</p>
-                <p>System operating normally.</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
         # Real-time risk distribution
-        st.subheader("📊 Risk Score Distribution")
+        st.subheader("Risk Score Distribution")
         
         col1, col2 = st.columns(2)
         
@@ -1043,7 +972,7 @@ def main():
             st.dataframe(fraud_by_type, use_container_width=True)
         
         with col2:
-            st.markdown("### � Transaction Amount Distribution")
+            st.markdown("### Transaction Amount Distribution")
             
             # Simple histogram using matplotlib
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -1197,197 +1126,12 @@ def main():
         
         st.markdown(tech_info)
     
-    # Tab 5: System Status
-    with tab5:
-        st.markdown("""
-        <div class="dashboard-section">
-            <h1 style="color: #2E7D32; text-align: center;">
-                ⚙️ System Status & Configuration
-            </h1>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 🖥️ Model Configuration")
-            
-            config_data = {
-                "Parameter": [
-                    "PCA Components",
-                    "Variance Explained",
-                    "Original Features",
-                    "Dimension Reduction",
-                    "Active Model",
-                    "Training Data Size",
-                    "Risk Threshold",
-                    "Sample Size",
-                ],
-                "Value": [
-                    f"{model_package['pca_components']}",
-                    f"{model_package['variance_explained']:.2%}",
-                    f"{len(model_package['feature_names'])}",
-                    f"{(1 - model_package['pca_components']/len(model_package['feature_names']))*100:.1f}%",
-                    "Both Models (RF & XGB)",
-                    f"{len(df):,} transactions",
-                    f"{risk_threshold:.1%}",
-                    f"{sample_size:,} transactions",
-                ],
-            }
-            
-            config_df = pd.DataFrame(config_data)
-            st.dataframe(
-                config_df,
-                use_container_width=True, 
-                hide_index=True,
-                height=350
-            )
-        
-        with col2:
-            st.markdown("### 📈 System Performance Metrics")
-            
-            # Enhanced system metrics with realistic values
-            uptime_hours = np.random.randint(8, 48)
-            system_metrics = {
-                'Metric': [
-                    '🖥️ CPU Usage',
-                    '💾 Memory Usage',
-                    '⚡ Prediction Latency',
-                    '📥 Model Load Time',
-                    '💨 Cache Hit Rate',
-                    '⏰ System Uptime',
-                    '📊 Processed Today',
-                    '🔄 Success Rate'
-                ],
-                'Value': [
-                    f"{np.random.randint(25, 45)}%",
-                    f"{np.random.randint(45, 70)}%",
-                    f"{np.random.randint(80, 150)}ms",
-                    f"{np.random.randint(3, 8)}s",
-                    f"{np.random.randint(88, 97)}%",
-                    f"{uptime_hours}h {np.random.randint(0, 59)}m",
-                    f"{np.random.randint(15000, 75000):,}",
-                    f"{np.random.randint(97, 100)}%"
-                ],
-                'Status': [
-                    '🟢 Optimal',
-                    '🟢 Good',
-                    '🟢 Fast',
-                    '🟢 Quick',
-                    '🟢 Excellent',
-                    '🟢 Stable',
-                    '🟢 Active',
-                    '🟢 Healthy'
-                ]
-            }
-            
-            system_df = pd.DataFrame(system_metrics)
-            st.dataframe(
-                system_df,
-                use_container_width=True, 
-                hide_index=True,
-                height=350
-            )
-        
-        # Enhanced deployment information
-        st.markdown("""
-        <div class="dashboard-section">
-            <h3 style="color: #2E7D32;">🚀 Deployment & Performance Summary</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        deployment_col1, deployment_col2, deployment_col3 = st.columns(3)
-        
-        with deployment_col1:
-            st.markdown("""
-            #### 🔧 Technical Specifications
-            - **Framework**: scikit-learn + XGBoost
-            - **Optimization**: PCA dimensionality reduction
-            - **Features**: 16 → 11 (31% reduction)
-            - **Variance Retained**: 95.9%
-            - **Model Size**: ~70% smaller
-            """)
-        
-        with deployment_col2:
-            st.markdown(f"""
-            #### 📊 Current Session Stats
-            - **Sample Analyzed**: {sample_size:,} transactions
-            - **High Risk Detected**: {high_risk_transactions:,}
-            - **Active Models**: Random Forest & XGBoost
-            - **Risk Threshold**: {risk_threshold:.1%}
-            - **Average Risk Score**: {avg_risk_score:.3f}
-            """)
-        
-        with deployment_col3:
-            st.markdown("""
-            #### ⚡ Performance Benefits
-            - **Training Speed**: 3-5x faster
-            - **Prediction Speed**: 2-3x faster
-            - **Memory Usage**: 30% reduction
-            - **Model Loading**: <5 seconds
-            - **Real-time Processing**: <0.3s
-            """)
-        
-        # System health check with visual indicators
-        st.markdown("""
-        <div class="dashboard-section">
-            <h3 style="color: #2E7D32;">💚 System Health Dashboard</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        health_checks = [
-            (
-                "📁 Dataset Status",
-                "✅ Online",
-                f"fraud_0.1origbase.csv ({len(df):,} transactions)",
-                "#4CAF50",
-            ),
-            ("🤖 Model Status", "✅ Loaded", "PCA-optimized models ready", "#4CAF50"),
-            (
-                "🔧 Processing Pipeline",
-                "✅ Active",
-                "Scaler, PCA, and encoders ready",
-                "#4CAF50",
-            ),
-            (
-                "📊 Prediction Engine",
-                "✅ Running",
-                f"Generated {len(predictions):,} predictions",
-                "#4CAF50",
-            ),
-            (
-                "⚠️ Alert System",
-                "✅ Monitoring",
-                f"Tracking {high_risk_transactions:,} high-risk transactions",
-                "#4CAF50",
-            ),
-            (
-                "🔄 Dashboard Status",
-                "✅ Responsive",
-                "Real-time updates active",
-                "#4CAF50",
-            ),
-        ]
-        
-        for i, (check, status, detail, color) in enumerate(health_checks):
-            col1, col2, col3 = st.columns([3, 2, 5])
-            with col1:
-                st.markdown(f"**{check}**")
-            with col2:
-                st.markdown(f"<span style='color: {color}; font-weight: bold;'>{status}</span>", 
-                           unsafe_allow_html=True)
-            with col3:
-                st.markdown(f"*{detail}*")
-            
-            if i < len(health_checks) - 1:
-                st.markdown("---")
-    
     # Enhanced footer with elder-friendly information
     st.markdown("---")
     st.markdown(
         f"""
     <div style='background: #e8f5e9; padding: 2rem; border-radius: 15px; text-align: center; color: #000000; margin-top: 2rem; border: 2px solid #4CAF50;'>
-        <h3 style='color: #2E7D32; margin-bottom: 1rem;'>🛡️ PCA-Optimized Fraud Detection Dashboard</h3>
+        <h3 style='color: #2E7D32; margin-bottom: 1rem;'>PCA-Optimized Fraud Detection Dashboard</h3>
         <p style='font-size: 1.1em; margin-bottom: 0.5rem;'>
             <strong>Last Updated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         </p>
