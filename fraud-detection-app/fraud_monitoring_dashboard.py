@@ -553,15 +553,27 @@ def main():
     )
 
     # Sample size for analysis
+    max_sample = min(100000, len(df))  # Cap at 100K for performance
     sample_size = st.sidebar.slider(
         "Sample Size for Analysis",
         min_value=1000,
-        max_value=min(50000, len(df)),
-        value=min(10000, len(df)),
+        max_value=max_sample,
+        value=min(50000, len(df)),
         step=1000,
         help="Number of transactions to analyze (larger samples take more time)",
     )
-
+    
+    # Dataset info
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📊 Dataset Information")
+    st.sidebar.info(f"""
+    **Total Records Available:** {len(df):,}
+    
+    **Current Analysis Sample:** {sample_size:,}
+    
+    **Sample Coverage:** {(sample_size/len(df)*100):.1f}% of dataset
+    """)
+    
     # Auto-refresh option
     auto_refresh = st.sidebar.checkbox("🔄 Auto-refresh (30s)", value=False)
 
