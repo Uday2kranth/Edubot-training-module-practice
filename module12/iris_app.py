@@ -140,7 +140,7 @@ def main():
         with col2:
             # Try to show image from resources folder, fallback if not available
             image_paths = ["resources/image1b.png", "image1b.png"]
-            image_displayed = True
+            image_displayed = False
             
             for image_path in image_paths:
                 if os.path.exists(image_path):
