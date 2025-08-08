@@ -150,7 +150,7 @@ def main():
                         elif predicted_class.lower() == "versicolor":
                             st.image(image_path, caption=f"🌺 {predicted_class.title()} Iris Flower", use_container_width=True)
                         elif predicted_class.lower() == "virginica":
-                            st.image(image_path, caption=f"🌷 {predicted_class.title()} Iris Flower", use_container_width=True)
+                            st.image(image_path, caption=f"� {predicted_class.title()} Iris Flower", use_container_width=True)
                         else:
                             st.image(image_path, caption=f"🌻 {predicted_class.title()} Iris Flower", use_container_width=True)
                         image_displayed = True
@@ -161,6 +161,33 @@ def main():
             # If no image could be displayed, just show the flower type
             if not image_displayed:
                 st.info(f"🌸 Predicted: {predicted_class.title()} Iris Flower")
+
+        # Show prediction probabilities
+                st.markdown("""
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 50%, #fbc2eb 100%); border-radius: 15px; margin: 10px 0;">
+                    <h2 style="color: #333; margin: 0;">� Versicolor Iris</h2>
+                    <p style="font-size: 18px; color: #555; margin: 10px 0;">Medium Petals • Moderate Sepals • Intermediate</p>
+                    <div style="font-size: 48px; margin: 15px 0;">🌺</div>
+                    <p style="color: #666; font-style: italic;">The balanced iris with moderate features</p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif predicted_class.lower() == "virginica":
+                st.markdown("""
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%); border-radius: 15px; margin: 10px 0;">
+                    <h2 style="color: white; margin: 0;">🌷 Virginica Iris</h2>
+                    <p style="font-size: 18px; color: #f0f0f0; margin: 10px 0;">Large Petals • Long Sepals • Biggest Overall</p>
+                    <div style="font-size: 48px; margin: 15px 0;">🌷</div>
+                    <p style="color: #ddd; font-style: italic;">The largest and most robust iris variety</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%); border-radius: 15px; margin: 10px 0;">
+                    <h2 style="color: #333; margin: 0;">🌻 {predicted_class.title()} Iris</h2>
+                    <div style="font-size: 48px; margin: 15px 0;">🌻</div>
+                    <p style="color: #666; font-style: italic;">A beautiful iris flower variety</p>
+                </div>
+                """, unsafe_allow_html=True)
 
         # Show prediction probabilities
         st.subheader("Prediction Confidence")

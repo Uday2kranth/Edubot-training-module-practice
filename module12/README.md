@@ -24,6 +24,8 @@ This project is designed for **beginners in Python and Machine Learning**. It us
 📦 Iris Classifier
 ├── 🐍 train_model.py      # Simple ML training script
 ├── 🌐 iris_app.py         # Streamlit web application
+├── 📁 resources/          # Image assets folder
+│   └── 🖼️ image1b.png     # Flower image
 ├── 🤖 iris_model.pkl      # Trained model (auto-generated)
 ├── 📋 model_info.pkl      # Model information (auto-generated)
 └── 📄 requirements.txt    # Dependencies
@@ -56,13 +58,13 @@ Go to: `http://localhost:8501`
 - Interactive sliders for flower measurements
 - Colorful and intuitive design
 - Instant predictions with one click
-- **Visual flower images** showing predicted results
+- **Flower images** from resources folder (with fallback)
 
 ### 🧠 **Smart Predictions**
 - 100% accuracy on test data
 - Shows confidence levels for each prediction
 - Explains which flower type is most likely
-- **Displays flower images** based on predictions
+- **Visual flower display** when images are available
 
 ### 📚 **Educational Content**
 - Learn about different iris flower types
